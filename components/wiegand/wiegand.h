@@ -75,6 +75,8 @@ struct wiegand_reader
     esp_timer_handle_t timer;
     bool start_parity;
     bool enabled;
+
+    uint8_t rd_idx;
 };
 
 /**
