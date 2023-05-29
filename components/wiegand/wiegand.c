@@ -44,8 +44,21 @@ static const char *TAG = "wiegand";
 
 #define TIMER_INTERVAL_US 50000 // 50ms
 
-#define CHECK(x) do { esp_err_t __; if ((__ = x) != ESP_OK) return __; } while (0)
-#define CHECK_ARG(VAL) do { if (!(VAL)) return ESP_ERR_INVALID_ARG; } while (0)
+#define CHECK(x)                                                                                                       \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        esp_err_t __;                                                                                                  \
+        if ((__ = x) != ESP_OK)                                                                                        \
+            return __;                                                                                                 \
+    }                                                                                                                  \
+    while (0)
+#define CHECK_ARG(VAL)                                                                                                 \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        if (!(VAL))                                                                                                    \
+            return ESP_ERR_INVALID_ARG;                                                                                \
+    }                                                                                                                  \
+    while (0)
 
 static void isr_disable(wiegand_reader_t *reader)
 {
@@ -115,44 +128,51 @@ static void timer_handler(void *arg)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-esp_err_t wiegand_reader_init(wiegand_reader_t *reader, gpio_num_t gpio_d0, gpio_num_t gpio_d1,
-        bool internal_pullups, size_t buf_size, wiegand_callback_t callback, wiegand_order_t bit_order,
-        wiegand_order_t byte_order)
+esp_err_t wiegand_reader_init(wiegand_reader_t *reader[CONFIG_NUM_SUPPORTED_WIE_READER],
+    gpio_num_t gpio_d0[CONFIG_NUM_SUPPORTED_WIE_READER], gpio_num_t gpio_d1[CONFIG_NUM_SUPPORTED_WIE_READER],
+    bool internal_pullups, size_t buf_size, wiegand_callback_t callback, wiegand_order_t bit_order,
+    wiegand_order_t byte_order, uint8_t num_wie_rd)
 {
-    CHECK_ARG(reader && buf_size && callback);
+    uint8_t i;
+
+    for (i = 0; i < num_wie_rd; i++)
+    {
+        CHECK_ARG(reader[i] && buf_size && callback);
+				ESP_LOGI(TAG, "CHECK_ARG(reader[%d] && buf_size && callback)", i);
+    }
 
     esp_err_t res = gpio_install_isr_service(0);
     if (res != ESP_OK && res != ESP_ERR_INVALID_STATE)
         return res;
 
-    memset(reader, 0, sizeof(wiegand_reader_t));
-    reader->gpio_d0 = gpio_d0;
-    reader->gpio_d1 = gpio_d1;
-    reader->size = buf_size;
-    reader->buf = calloc(buf_size, 1);
-    reader->bit_order = bit_order;
-    reader->byte_order = byte_order;
-    reader->callback = callback;
+    for (i = 0; i < num_wie_rd; i++)
+    {
+        memset(reader[i], 0, sizeof(wiegand_reader_t));
+        reader[i]->gpio_d0 = gpio_d0[i];
+        reader[i]->gpio_d1 = gpio_d1[i];
+        reader[i]->size = buf_size;
+        reader[i]->buf = calloc(buf_size, 1);
+        reader[i]->bit_order = bit_order;
+        reader[i]->byte_order = byte_order;
+        reader[i]->callback = callback;
 
-    esp_timer_create_args_t timer_args = {
-        .name = TAG,
-        .arg = reader,
-        .callback = timer_handler,
-        .dispatch_method = ESP_TIMER_TASK
-    };
-    CHECK(esp_timer_create(&timer_args, &reader->timer));
+        esp_timer_create_args_t timer_args
+            = { .name = TAG, .arg = reader[i], .callback = timer_handler, .dispatch_method = ESP_TIMER_TASK };
+        CHECK(esp_timer_create(&timer_args, &reader[i]->timer));
 
-    CHECK(gpio_set_direction(gpio_d0, GPIO_MODE_INPUT));
-    CHECK(gpio_set_direction(gpio_d1, GPIO_MODE_INPUT));
-    CHECK(gpio_set_pull_mode(gpio_d0, internal_pullups ? GPIO_PULLUP_ONLY : GPIO_FLOATING));
-    CHECK(gpio_set_pull_mode(gpio_d1, internal_pullups ? GPIO_PULLUP_ONLY : GPIO_FLOATING));
-    isr_disable(reader);
-    CHECK(gpio_isr_handler_add(gpio_d0, isr_handler, reader));
-    CHECK(gpio_isr_handler_add(gpio_d1, isr_handler, reader));
-    isr_enable(reader);
-    reader->enabled = true;
+        CHECK(gpio_set_direction(gpio_d0[i], GPIO_MODE_INPUT));
+        CHECK(gpio_set_direction(gpio_d1[i], GPIO_MODE_INPUT));
+        CHECK(gpio_set_pull_mode(gpio_d0[i], internal_pullups ? GPIO_PULLUP_ONLY : GPIO_FLOATING));
+        CHECK(gpio_set_pull_mode(gpio_d1[i], internal_pullups ? GPIO_PULLUP_ONLY : GPIO_FLOATING));
+        isr_disable(reader[i]);
+        CHECK(gpio_isr_handler_add(gpio_d0[i], isr_handler, reader[i]));
+        CHECK(gpio_isr_handler_add(gpio_d1[i], isr_handler, reader[i]));
+        isr_enable(reader[i]);
+        reader[i]->enabled = true;
+        reader[i]->rd_idx = i;
 
-    ESP_LOGD(TAG, "Reader initialized on D0=%d, D1=%d", gpio_d0, gpio_d1);
+        ESP_LOGI(TAG, "Reader[%d] initialized on D0=%d, D1=%d", i, gpio_d0[i], gpio_d1[i]);
+    }
 
     return ESP_OK;
 }
