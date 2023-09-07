@@ -128,8 +128,8 @@ static void timer_handler(void *arg)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-esp_err_t wiegand_reader_init(wiegand_reader_t *reader[CONFIG_NUM_SUPPORTED_WIE_READER],
-    gpio_num_t gpio_d0[CONFIG_NUM_SUPPORTED_WIE_READER], gpio_num_t gpio_d1[CONFIG_NUM_SUPPORTED_WIE_READER],
+esp_err_t wiegand_reader_init(wiegand_reader_t *reader[CONFIG_NUM_SUPPORTED_READERS],
+    gpio_num_t gpio_d0[CONFIG_NUM_SUPPORTED_READERS], gpio_num_t gpio_d1[CONFIG_NUM_SUPPORTED_READERS],
     bool internal_pullups, size_t buf_size, wiegand_callback_t callback, wiegand_order_t bit_order,
     wiegand_order_t byte_order, uint8_t num_wie_rd)
 {
