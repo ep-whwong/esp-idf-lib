@@ -46,6 +46,7 @@ typedef struct {
 } i2c_port_state_t;
 
 static i2c_port_state_t states[I2C_NUM_MAX];
+static uint8_t i2c_buffer[I2C_LINK_RECOMMENDED_SIZE(5)]; 
 
 #if CONFIG_I2CDEV_NOLOCK
 #define SEMAPHORE_TAKE(port)
@@ -278,9 +279,7 @@ esp_err_t i2c_dev_read(const i2c_dev_t *dev, const void *out_data, size_t out_si
     esp_err_t res = i2c_setup_port(dev);
     if (res == ESP_OK)
     {
-        //i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-        uint8_t buffer[I2C_LINK_RECOMMENDED_SIZE(4)]; //Buffer size follow max number of i2c_master transaction as documented
-        i2c_cmd_handle_t cmd = i2c_cmd_link_create_static(buffer, I2C_LINK_RECOMMENDED_SIZE(4));
+        i2c_cmd_handle_t cmd = i2c_cmd_link_create_static(i2c_buffer, I2C_LINK_RECOMMENDED_SIZE(4));
     
         if (out_data && out_size)
         {
@@ -296,7 +295,7 @@ esp_err_t i2c_dev_read(const i2c_dev_t *dev, const void *out_data, size_t out_si
         res = i2c_master_cmd_begin(dev->port, cmd, pdMS_TO_TICKS(CONFIG_I2CDEV_TIMEOUT));
         if (res != ESP_OK)
             ESP_LOGE(TAG, "Could not read from device [0x%02x at %d]: %d (%s)", dev->addr, dev->port, res, esp_err_to_name(res));
-        // i2c_cmd_link_delete(cmd);
+
         i2c_cmd_link_delete_static(cmd);
     }
     SEMAPHORE_GIVE(dev->port);
@@ -311,10 +310,8 @@ esp_err_t i2c_dev_write(const i2c_dev_t *dev, const void *out_reg, size_t out_re
 
     esp_err_t res = i2c_setup_port(dev);
     if (res == ESP_OK)
-    {
-        //i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-        uint8_t buffer[I2C_LINK_RECOMMENDED_SIZE(5)]; //Buffer size follow max number of i2c_master transaction as documented
-        i2c_cmd_handle_t cmd = i2c_cmd_link_create_static(buffer, I2C_LINK_RECOMMENDED_SIZE(5));
+    {   
+        i2c_cmd_handle_t cmd = i2c_cmd_link_create_static(i2c_buffer, I2C_LINK_RECOMMENDED_SIZE(5));
     
         i2c_master_start(cmd);
         i2c_master_write_byte(cmd, dev->addr << 1, true);
@@ -325,7 +322,7 @@ esp_err_t i2c_dev_write(const i2c_dev_t *dev, const void *out_reg, size_t out_re
         res = i2c_master_cmd_begin(dev->port, cmd, pdMS_TO_TICKS(CONFIG_I2CDEV_TIMEOUT));
         if (res != ESP_OK)
             ESP_LOGE(TAG, "Could not write to device [0x%02x at %d]: %d (%s)", dev->addr, dev->port, res, esp_err_to_name(res));
-        // i2c_cmd_link_delete(cmd);
+        
         i2c_cmd_link_delete_static(cmd);
     }
     SEMAPHORE_GIVE(dev->port);
