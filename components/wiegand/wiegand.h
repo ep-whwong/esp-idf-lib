@@ -90,8 +90,8 @@ struct wiegand_reader
  * @param byte_order       Byte order of data
  * @return `ESP_OK` on success
  */
-esp_err_t wiegand_reader_init(wiegand_reader_t *reader[CONFIG_NUM_SUPPORTED_READERS],
-    gpio_num_t gpio_d0[CONFIG_NUM_SUPPORTED_READERS], gpio_num_t gpio_d1[CONFIG_NUM_SUPPORTED_READERS],
+esp_err_t wiegand_reader_init(wiegand_reader_t *reader[CONFIG_NUM_SUPPORTED_READERS_PER_PD],
+    gpio_num_t gpio_d0[CONFIG_NUM_SUPPORTED_READERS_PER_PD], gpio_num_t gpio_d1[CONFIG_NUM_SUPPORTED_READERS_PER_PD],
     bool internal_pullups, size_t buf_size, wiegand_callback_t callback, wiegand_order_t bit_order,
     wiegand_order_t byte_order, uint8_t num_wie_rd);
 
