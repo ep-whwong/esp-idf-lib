@@ -149,6 +149,17 @@ static esp_err_t write_reg_bit_8(mcp23x17_t *dev, uint8_t reg, bool val, uint8_t
 
 #else
 
+static esp_err_t spi_transmit(mcp23x17_t *dev, spi_transaction_t *t)
+{
+    esp_err_t err;
+    if (dev->use_software_cs)
+        gpio_set_level(dev->cs_pin, 0);
+    err = spi_device_transmit(dev->spi_dev, t);
+    if (dev->use_software_cs)
+        gpio_set_level(dev->cs_pin, 1);
+    return err;
+}
+
 static esp_err_t read_reg_16(mcp23x17_t *dev, uint8_t reg, uint16_t *val)
 {
     CHECK_ARG(dev && val);
@@ -162,7 +173,7 @@ static esp_err_t read_reg_16(mcp23x17_t *dev, uint8_t reg, uint16_t *val)
     t.tx_buffer = tx;
     t.length = 32;   // 32 bits
 
-    CHECK(spi_device_transmit(dev->spi_dev, &t));
+    CHECK(spi_transmit(dev, &t));
 
     *val = (rx[3] << 8) | rx[2];
 
@@ -180,7 +191,7 @@ static esp_err_t write_reg_16(mcp23x17_t *dev, uint8_t reg, uint16_t val)
     t.tx_buffer = tx;
     t.length = 32;   // 32 bits
 
-    CHECK(spi_device_transmit(dev->spi_dev, &t));
+    CHECK(spi_transmit(dev, &t));
 
     return ESP_OK;
 }
@@ -208,7 +219,7 @@ static esp_err_t read_reg_8(mcp23x17_t *dev, uint8_t reg, uint8_t *val)
     t.tx_buffer = tx;
     t.length = 24;   // 24 bits
 
-    CHECK(spi_device_transmit(dev->spi_dev, &t));
+    CHECK(spi_transmit(dev, &t));
 
     *val = rx[2];
 
@@ -226,7 +237,7 @@ static esp_err_t write_reg_8(mcp23x17_t *dev, uint8_t reg, uint8_t val)
     t.tx_buffer = tx;
     t.length = 24;   // 24 bits
 
-    CHECK(spi_device_transmit(dev->spi_dev, &t));
+    CHECK(spi_transmit(dev, &t));
 
     return ESP_OK;
 }
@@ -310,9 +321,21 @@ esp_err_t mcp23x17_init_desc_spi(mcp23x17_t *dev, spi_host_device_t host, uint32
     }
 
     dev->addr = addr;
+    dev->cs_pin = cs_pin;
 
     memset(&dev->spi_cfg, 0, sizeof(dev->spi_cfg));
-    dev->spi_cfg.spics_io_num = cs_pin;
+    if (dev->use_software_cs)
+    {
+        // Configure software Chip Select (CS) and pull the pin high.
+        dev->spi_cfg.spics_io_num = -1;
+        CHECK(gpio_set_direction(dev->cs_pin, GPIO_MODE_OUTPUT));
+        CHECK(gpio_set_level(dev->cs_pin, 1));
+    }
+    else
+    {
+        // Configure hardware CS.
+        dev->spi_cfg.spics_io_num = dev->cs_pin;
+    }
     dev->spi_cfg.clock_speed_hz = clock_speed_hz;
     dev->spi_cfg.mode = 0;
     dev->spi_cfg.queue_size = 1;
@@ -320,7 +343,7 @@ esp_err_t mcp23x17_init_desc_spi(mcp23x17_t *dev, spi_host_device_t host, uint32
     return spi_bus_add_device(host, &dev->spi_cfg, &dev->spi_dev);
 }
 
-esp_err_t mcp23x17_free_desc(mcp23x17_t *dev)
+esp_err_t mcp23x17_free_desc_spi(mcp23x17_t *dev)
 {
     CHECK_ARG(dev);
 
@@ -359,6 +382,8 @@ esp_err_t mcp23x17_set_int_out_mode(mcp23x17_t *dev, mcp23x17_int_out_mode_t mod
     if (mode == MCP23X17_OPEN_DRAIN)
         return write_reg_bit_8(dev, REG_IOCON, true, BIT_IOCON_ODR);
 
+    // The INTPOL bit is only functional if the ODR bit is cleared.
+    write_reg_bit_8(dev, REG_IOCON, false, BIT_IOCON_ODR);
     return write_reg_bit_8(dev, REG_IOCON, mode == MCP23X17_ACTIVE_HIGH, BIT_IOCON_INTPOL);
 }
 
