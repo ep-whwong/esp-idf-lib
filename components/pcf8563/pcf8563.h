@@ -39,7 +39,7 @@
 #ifndef __PCF8563_H__
 #define __PCF8563_H__
 
-#include <i2cdev.h>
+#include "driver/i2c_master.h"
 #include <stdbool.h>
 #include <time.h>
 #include <esp_err.h>
@@ -90,7 +90,7 @@ typedef enum {
  * @param scl_gpio SCL GPIO
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_init_desc(i2c_dev_t *dev, i2c_port_t port, gpio_num_t sda_gpio, gpio_num_t scl_gpio);
+esp_err_t pcf8563_init_desc(i2c_master_bus_handle_t bus_handle, i2c_master_dev_handle_t *dev_handle);
 
 /**
  * @brief Free device descriptor
@@ -98,7 +98,7 @@ esp_err_t pcf8563_init_desc(i2c_dev_t *dev, i2c_port_t port, gpio_num_t sda_gpio
  * @param dev I2C device descriptor
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_free_desc(i2c_dev_t *dev);
+esp_err_t pcf8563_free_desc(i2c_master_dev_handle_t dev_handle);
 
 /**
  * @brief Set the time on the RTC
@@ -107,7 +107,7 @@ esp_err_t pcf8563_free_desc(i2c_dev_t *dev);
  * @param time Pointer to time struct
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_set_time(i2c_dev_t *dev, struct tm *time);
+esp_err_t pcf8563_set_time(i2c_master_dev_handle_t dev_handle, struct tm *time);
 
 /**
  * @brief Get the time from the RTC
@@ -117,7 +117,7 @@ esp_err_t pcf8563_set_time(i2c_dev_t *dev, struct tm *time);
  * @param[out] valid Time validity, false when RTC had power failures
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_get_time(i2c_dev_t *dev, struct tm *time, bool *valid);
+esp_err_t pcf8563_get_time(i2c_master_dev_handle_t dev_handle, struct tm *time, bool *valid);
 
 /**
  * @brief Set output frequency on CLKOUT pin
@@ -126,7 +126,7 @@ esp_err_t pcf8563_get_time(i2c_dev_t *dev, struct tm *time, bool *valid);
  * @param freq Frequency
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_set_clkout(i2c_dev_t *dev, pcf8563_clkout_freq_t freq);
+esp_err_t pcf8563_set_clkout(i2c_master_dev_handle_t dev_handle, pcf8563_clkout_freq_t freq);
 
 /**
  * @brief Get current frequency on CLKOUT pin
@@ -135,7 +135,7 @@ esp_err_t pcf8563_set_clkout(i2c_dev_t *dev, pcf8563_clkout_freq_t freq);
  * @param[out] freq Frequency
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_get_clkout(i2c_dev_t *dev, pcf8563_clkout_freq_t *freq);
+esp_err_t pcf8563_get_clkout(i2c_master_dev_handle_t dev_handle, pcf8563_clkout_freq_t *freq);
 
 /**
  * @brief Setup timer
@@ -145,7 +145,7 @@ esp_err_t pcf8563_get_clkout(i2c_dev_t *dev, pcf8563_clkout_freq_t *freq);
  * @param clock Timer frequency
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_set_timer_settings(i2c_dev_t *dev, bool int_enable, pcf8563_timer_clock_t clock);
+esp_err_t pcf8563_set_timer_settings(i2c_master_dev_handle_t dev_handle, bool int_enable, pcf8563_timer_clock_t clock);
 
 /**
  * @brief Get timer settings
@@ -155,7 +155,7 @@ esp_err_t pcf8563_set_timer_settings(i2c_dev_t *dev, bool int_enable, pcf8563_ti
  * @param[out] clock Timer frequency
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_get_timer_settings(i2c_dev_t *dev, bool *int_enabled, pcf8563_timer_clock_t *clock);
+esp_err_t pcf8563_get_timer_settings(i2c_master_dev_handle_t dev_handle, bool *int_enabled, pcf8563_timer_clock_t *clock);
 
 /**
  * @brief Set timer register value
@@ -164,7 +164,7 @@ esp_err_t pcf8563_get_timer_settings(i2c_dev_t *dev, bool *int_enabled, pcf8563_
  * @param value Value to set int timer register
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_set_timer_value(i2c_dev_t *dev, uint8_t value);
+esp_err_t pcf8563_set_timer_value(i2c_master_dev_handle_t dev_handle, uint8_t value);
 
 /**
  * @brief Get timer register value
@@ -173,7 +173,7 @@ esp_err_t pcf8563_set_timer_value(i2c_dev_t *dev, uint8_t value);
  * @param[out] value Timer value
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_get_timer_value(i2c_dev_t *dev, uint8_t *value);
+esp_err_t pcf8563_get_timer_value(i2c_master_dev_handle_t dev_handle, uint8_t *value);
 
 /**
  * @brief Start timer
@@ -181,7 +181,7 @@ esp_err_t pcf8563_get_timer_value(i2c_dev_t *dev, uint8_t *value);
  * @param dev I2C device descriptor
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_start_timer(i2c_dev_t *dev);
+esp_err_t pcf8563_start_timer(i2c_master_dev_handle_t dev_handle);
 
 /**
  * @brief Stop timer
@@ -189,7 +189,7 @@ esp_err_t pcf8563_start_timer(i2c_dev_t *dev);
  * @param dev I2C device descriptor
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_stop_timer(i2c_dev_t *dev);
+esp_err_t pcf8563_stop_timer(i2c_master_dev_handle_t dev_handle);
 
 /**
  * @brief Get state of the timer flag
@@ -198,7 +198,7 @@ esp_err_t pcf8563_stop_timer(i2c_dev_t *dev);
  * @param[out] timer true when flag is set
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_get_timer_flag(i2c_dev_t *dev, bool *timer);
+esp_err_t pcf8563_get_timer_flag(i2c_master_dev_handle_t dev_handle, bool *timer);
 
 /**
  * @brief Clear timer flag
@@ -206,7 +206,7 @@ esp_err_t pcf8563_get_timer_flag(i2c_dev_t *dev, bool *timer);
  * @param dev I2C device descriptor
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_clear_timer_flag(i2c_dev_t *dev);
+esp_err_t pcf8563_clear_timer_flag(i2c_master_dev_handle_t dev_handle);
 
 /**
  * @brief Setup alarm
@@ -217,7 +217,7 @@ esp_err_t pcf8563_clear_timer_flag(i2c_dev_t *dev);
  * @param time Alarm time. Only tm_min, tm_hour, tm_mday and tm_wday are used
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_set_alarm(i2c_dev_t *dev, bool int_enable, uint32_t flags, struct tm *time);
+esp_err_t pcf8563_set_alarm(i2c_master_dev_handle_t dev_handle, bool int_enable, uint32_t flags, struct tm *time);
 
 /**
  * @brief Get alarm settings
@@ -228,7 +228,7 @@ esp_err_t pcf8563_set_alarm(i2c_dev_t *dev, bool int_enable, uint32_t flags, str
  * @param[out] time Alarm time. Only tm_min, tm_hour, tm_mday and tm_wday are used
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_get_alarm(i2c_dev_t *dev, bool *int_enabled, uint32_t *flags, struct tm *time);
+esp_err_t pcf8563_get_alarm(i2c_master_dev_handle_t dev_handle, bool *int_enabled, uint32_t *flags, struct tm *time);
 
 /**
  * @brief Get alarm flag
@@ -237,7 +237,7 @@ esp_err_t pcf8563_get_alarm(i2c_dev_t *dev, bool *int_enabled, uint32_t *flags, 
  * @param[out] alarm true if alarm occurred
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_get_alarm_flag(i2c_dev_t *dev, bool *alarm);
+esp_err_t pcf8563_get_alarm_flag(i2c_master_dev_handle_t dev_handle, bool *alarm);
 
 /**
  * @brief Clear alarm flag
@@ -245,7 +245,7 @@ esp_err_t pcf8563_get_alarm_flag(i2c_dev_t *dev, bool *alarm);
  * @param dev I2C device descriptor
  * @return `ESP_OK` on success
  */
-esp_err_t pcf8563_clear_alarm_flag(i2c_dev_t *dev);
+esp_err_t pcf8563_clear_alarm_flag(i2c_master_dev_handle_t dev_handle);
 
 #ifdef __cplusplus
 }
