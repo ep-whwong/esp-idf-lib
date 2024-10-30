@@ -1,0 +1,20 @@
+name: wsen_hids
+description: Driver for WSEN_HIDS_2525020210002 Temperature and Humidiy Sensor
+version: 1.0.0
+groups:
+  - rtc
+code_owners: WHWONG
+depends:
+  - i2cdev
+  - log
+  - esp_idf_lib_helpers
+thread_safe: yes
+targets:
+  - esp32
+  - esp8266
+  - esp32s2
+  - esp32c3
+license: BSD-3
+copyrights:
+  - name: WHWONG
+    year: 2024
