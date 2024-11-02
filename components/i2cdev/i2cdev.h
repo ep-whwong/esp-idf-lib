@@ -153,6 +153,7 @@ esp_err_t i2c_dev_give_mutex(i2c_dev_t *dev);
  * @return ESP_OK if device is available
  */
 esp_err_t i2c_dev_probe(const i2c_dev_t *dev, i2c_dev_type_t operation_type);
+esp_err_t i2c_dev_probe_with_addr(const i2c_dev_t *dev, const uint8_t dev_addr, i2c_dev_type_t operation_type);
 
 /**
  * @brief Read from slave device
@@ -171,6 +172,9 @@ esp_err_t i2c_dev_probe(const i2c_dev_t *dev, i2c_dev_type_t operation_type);
 esp_err_t i2c_dev_read(const i2c_dev_t *dev, const void *out_data,
         size_t out_size, void *in_data, size_t in_size);
 
+esp_err_t i2c_dev_read_with_address(const i2c_dev_t *dev, const uint8_t dev_addr, 
+        const void *out_data, size_t out_size, void *in_data, size_t in_size);
+
 /**
  * @brief Write to slave device
  *
@@ -186,6 +190,10 @@ esp_err_t i2c_dev_read(const i2c_dev_t *dev, const void *out_data,
  */
 esp_err_t i2c_dev_write(const i2c_dev_t *dev, const void *out_reg,
         size_t out_reg_size, const void *out_data, size_t out_size);
+
+esp_err_t i2c_dev_write_with_address(const i2c_dev_t *dev, const uint8_t dev_addr, 
+        const void *out_reg, size_t out_reg_size, 
+        const void *out_data, size_t out_size);        
 
 /**
  * @brief Read from register with an 8-bit address
