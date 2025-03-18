@@ -42,8 +42,7 @@
 #include <driver/gpio.h>
 #include <esp_err.h>
 #include <esp_timer.h>
-
-#include "../../../../EdgeV2/main/common_defines.h"
+#include "../../../../main/common_defines.h"
 
 #ifdef __cplusplus
 extern "C" {
